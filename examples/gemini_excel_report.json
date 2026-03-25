@@ -1,0 +1,52 @@
+{
+  "name": "Gemini Excel分析レポート",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.0-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "excel_data",
+      "type": "open_file",
+      "params": {
+        "path": "data.xlsx"
+      }
+    },
+    {
+      "id": "summary",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたはデータ分析と報告書作成の専門家です。",
+        "prompt": "以下のExcelデータを分析し、日本語でビジネスレポートを作成してください:\n\n{{excel_data}}\n\n以下の形式で記載してください:\n## エグゼクティブサマリー\n## 主要指標\n## 傾向分析\n## 推奨アクション"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "分析レポート",
+        "value": "{{summary}}"
+      }
+    },
+    {
+      "id": "write_report",
+      "type": "write_file",
+      "params": {
+        "path": "report.txt",
+        "value": "{{summary}}"
+      }
+    },
+    {
+      "id": "write_excel",
+      "type": "write_excel",
+      "params": {
+        "path": "data.xlsx",
+        "sheet": "AIレポート",
+        "cell": "A1",
+        "value": "{{summary}}"
+      }
+    }
+  ]
+}

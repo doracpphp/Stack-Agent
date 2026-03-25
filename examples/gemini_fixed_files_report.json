@@ -1,0 +1,57 @@
+{
+  "name": "Gemini 固定複数ファイルレポート",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "documents",
+      "type": "open_files",
+      "params": {
+        "paths": [
+          "report_q1.txt",
+          "report_q2.txt",
+          "report_q3.txt",
+          "report_q4.txt"
+        ]
+      }
+    },
+    {
+      "id": "annual_report",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは経営コンサルタントです。四半期レポートをもとに年次報告書を作成してください。",
+        "prompt": "以下の4つの四半期レポートをもとに、年次報告書を日本語で作成してください。\n\n## 作成する項目\n1. 年間サマリー\n2. 四半期ごとの業績推移\n3. 通年の課題と成果\n4. 来年度への提言\n\n{{documents}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "年次報告書",
+        "value": "{{annual_report}}"
+      }
+    },
+    {
+      "id": "save_txt",
+      "type": "write_file",
+      "params": {
+        "path": "annual_report.txt",
+        "value": "{{annual_report}}"
+      }
+    },
+    {
+      "id": "save_excel",
+      "type": "write_excel",
+      "params": {
+        "path": "annual_report.xlsx",
+        "sheet": "年次報告書",
+        "cell": "A1",
+        "value": "{{annual_report}}"
+      }
+    }
+  ]
+}

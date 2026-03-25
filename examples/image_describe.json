@@ -1,0 +1,42 @@
+{
+  "name": "画像説明生成",
+  "version": "1.0",
+  "llm": {
+    "provider": "ollama",
+    "model": "llava",
+    "base_url": "http://localhost:11434"
+  },
+  "tasks": [
+    {
+      "id": "image",
+      "type": "read_image",
+      "params": {
+        "path": "photo.jpg"
+      }
+    },
+    {
+      "id": "description",
+      "type": "llm_prompt",
+      "params": {
+        "prompt": "この画像を詳しく説明してください。",
+        "images": ["image"]
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "画像説明",
+        "value": "{{description}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "description.txt",
+        "value": "{{description}}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "name": "Gemini 月次報告書自動生成",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "minutes",
+      "type": "open_file",
+      "params": {
+        "path": "examples/sample_data/meeting_minutes.txt"
+      }
+    },
+    {
+      "id": "progress",
+      "type": "open_file",
+      "params": {
+        "path": "examples/sample_data/task_progress.txt"
+      }
+    },
+    {
+      "id": "issues",
+      "type": "open_file",
+      "params": {
+        "path": "examples/sample_data/issues.txt"
+      }
+    },
+    {
+      "id": "report",
+      "type": "fill_template",
+      "params": {
+        "template": "examples/templates/monthly_report_template.txt",
+        "data": ["minutes", "progress", "issues"],
+        "instruction": "提供された議事録・タスク進捗・課題管理表をもとに、テンプレートの各項目を日本語で埋めて月次業務報告書を完成させてください。テンプレートのMarkdown構造・表形式を厳守し、[...]の部分を実際の内容に置き換えてください。"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "月次業務報告書",
+        "value": "{{report}}"
+      }
+    },
+    {
+      "id": "save_md",
+      "type": "write_file",
+      "params": {
+        "path": "monthly_report.md",
+        "value": "{{report}}"
+      }
+    },
+    {
+      "id": "save_excel",
+      "type": "write_excel",
+      "params": {
+        "path": "monthly_report.xlsx",
+        "sheet": "月次報告書",
+        "cell": "A1",
+        "value": "{{report}}"
+      }
+    }
+  ]
+}

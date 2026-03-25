@@ -1,0 +1,51 @@
+{
+  "name": "Gemini 画像分析レポート",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.0-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "image_path",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "画像ファイルパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "image",
+      "type": "read_image",
+      "params": {
+        "path": "{{image_path}}"
+      }
+    },
+    {
+      "id": "analysis",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは画像分析の専門家です。画像の内容を詳細かつ構造的に説明してください。",
+        "prompt": "この画像を分析し、以下の項目を含めて日本語でレポートを作成してください:\n1. 全体的な概要\n2. 主要な要素・オブジェクト\n3. 色彩・構図の特徴\n4. 気づいた点や特記事項",
+        "images": ["image"]
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "画像分析レポート",
+        "value": "{{analysis}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "image_report.txt",
+        "value": "{{analysis}}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "Gemini 報告書自動生成（ファイル選択）",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "template_path",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "報告書テンプレートのパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "source_files",
+      "type": "read_stdin_paths",
+      "params": {
+        "prompt": "参照するファイルのパスを入力してください（空行で終了）:"
+      }
+    },
+    {
+      "id": "report",
+      "type": "fill_template",
+      "params": {
+        "template": "{{template_path}}",
+        "data": ["source_files"],
+        "instruction": "提供されたデータをもとに、テンプレートの各項目を日本語で埋めて報告書を完成させてください。テンプレートの構造・フォーマットを厳守し、[...]の部分を実際の内容に置き換えてください。"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "生成された報告書",
+        "value": "{{report}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "output_report.md",
+        "value": "{{report}}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "name": "Gemini ドキュメントQ&A",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "file_path",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "ファイルパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "document",
+      "type": "open_file",
+      "params": {
+        "path": "{{file_path}}"
+      }
+    },
+    {
+      "id": "question",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "質問を入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "answer",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは文書に基づいて正確に質問に答えるアシスタントです。文書に記載されていない情報は「文書には記載されていません」と答えてください。",
+        "prompt": "## 文書\n\n{{document}}\n\n## 質問\n\n{{question}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "回答",
+        "value": "{{answer}}"
+      }
+    }
+  ]
+}

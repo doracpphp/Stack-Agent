@@ -1,0 +1,50 @@
+{
+  "name": "ドキュメント要約",
+  "version": "1.0",
+  "llm": {
+    "provider": "ollama",
+    "model": "llama3.2",
+    "base_url": "http://localhost:11434"
+  },
+  "tasks": [
+    {
+      "id": "file_path",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "ファイルパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "document",
+      "type": "open_file",
+      "params": {
+        "path": "{{file_path}}"
+      }
+    },
+    {
+      "id": "summary",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは優秀な文書要約アシスタントです。",
+        "prompt": "以下のドキュメントを日本語で簡潔に要約してください:\n\n{{document}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "要約結果",
+        "value": "{{summary}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "summary.txt",
+        "value": "{{summary}}"
+      }
+    }
+  ]
+}

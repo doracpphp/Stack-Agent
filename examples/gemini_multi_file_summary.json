@@ -1,0 +1,42 @@
+{
+  "name": "Gemini 複数ファイル要約",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "documents",
+      "type": "read_stdin_paths",
+      "params": {
+        "prompt": "要約するファイルのパスを入力してください（空行で終了）:"
+      }
+    },
+    {
+      "id": "summary",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは優秀な文書要約アシスタントです。複数のファイルを横断的に分析し、重要な情報を漏れなく整理してください。",
+        "prompt": "以下の複数ファイルをまとめて要約してください。\n各ファイルの要点と、ファイル間の関連性があれば指摘してください。\n\n{{documents}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "複数ファイル要約結果",
+        "value": "{{summary}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "multi_summary.txt",
+        "value": "{{summary}}"
+      }
+    }
+  ]
+}

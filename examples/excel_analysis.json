@@ -1,0 +1,44 @@
+{
+  "name": "Excel分析とレポート",
+  "version": "1.0",
+  "llm": {
+    "provider": "ollama",
+    "model": "llama3.2",
+    "base_url": "http://localhost:11434"
+  },
+  "tasks": [
+    {
+      "id": "excel_data",
+      "type": "open_file",
+      "params": {
+        "path": "data.xlsx"
+      }
+    },
+    {
+      "id": "analysis",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたはデータ分析の専門家です。",
+        "prompt": "以下のExcelデータを分析し、主要な傾向と洞察を日本語でまとめてください:\n\n{{excel_data}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "分析結果",
+        "value": "{{analysis}}"
+      }
+    },
+    {
+      "id": "write_result",
+      "type": "write_excel",
+      "params": {
+        "path": "data.xlsx",
+        "sheet": "分析結果",
+        "cell": "A1",
+        "value": "{{analysis}}"
+      }
+    }
+  ]
+}

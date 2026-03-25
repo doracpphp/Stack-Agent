@@ -1,0 +1,54 @@
+{
+  "name": "Gemini フォルダ一括報告書生成",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "source_files",
+      "type": "open_folder",
+      "params": {
+        "path": "examples/sample_data",
+        "recursive": false
+      }
+    },
+    {
+      "id": "report",
+      "type": "fill_template",
+      "params": {
+        "template": "examples/templates/monthly_report_template.txt",
+        "data": ["source_files"],
+        "instruction": "提供されたデータをもとに、テンプレートの各項目を日本語で埋めて月次業務報告書を完成させてください。"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "月次業務報告書",
+        "value": "{{report}}"
+      }
+    },
+    {
+      "id": "save_md",
+      "type": "write_file",
+      "params": {
+        "path": "monthly_report.md",
+        "value": "{{report}}"
+      }
+    },
+    {
+      "id": "save_excel",
+      "type": "write_excel",
+      "params": {
+        "path": "monthly_report.xlsx",
+        "sheet": "月次報告書",
+        "cell": "A1",
+        "value": "{{report}}"
+      }
+    }
+  ]
+}

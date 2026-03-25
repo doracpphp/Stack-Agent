@@ -1,0 +1,58 @@
+{
+  "name": "Gemini 複数ファイル比較",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "file_a",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "比較元ファイルのパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "file_b",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "比較先ファイルのパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "documents",
+      "type": "open_files",
+      "params": {
+        "paths": ["{{file_a}}", "{{file_b}}"]
+      }
+    },
+    {
+      "id": "comparison",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは文書比較の専門家です。2つのファイルを詳細に比較し、差異と共通点を明確に示してください。",
+        "prompt": "以下の2つのファイルを比較し、日本語でレポートを作成してください:\n\n## 比較観点\n- 共通している内容\n- 異なっている内容\n- 追加・削除された情報\n- 総合評価\n\n{{documents}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "比較結果",
+        "value": "{{comparison}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "comparison_report.txt",
+        "value": "{{comparison}}"
+      }
+    }
+  ]
+}

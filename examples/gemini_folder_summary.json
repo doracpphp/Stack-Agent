@@ -1,0 +1,44 @@
+{
+  "name": "Gemini フォルダ一括要約",
+  "version": "1.0",
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "api_key": ""
+  },
+  "tasks": [
+    {
+      "id": "documents",
+      "type": "open_folder",
+      "params": {
+        "path": "examples/sample_data",
+        "extensions": [".txt", ".md", ".pdf"],
+        "recursive": false
+      }
+    },
+    {
+      "id": "summary",
+      "type": "llm_prompt",
+      "params": {
+        "system": "あなたは優秀な文書要約アシスタントです。",
+        "prompt": "以下の複数ファイルをまとめて要約し、重要なポイントを整理してください:\n\n{{documents}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "フォルダ内ファイルの要約",
+        "value": "{{summary}}"
+      }
+    },
+    {
+      "id": "save",
+      "type": "write_file",
+      "params": {
+        "path": "folder_summary.txt",
+        "value": "{{summary}}"
+      }
+    }
+  ]
+}

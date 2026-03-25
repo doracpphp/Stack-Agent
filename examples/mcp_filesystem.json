@@ -1,0 +1,46 @@
+{
+  "name": "MCPファイルシステム操作",
+  "version": "1.0",
+  "llm": {
+    "provider": "ollama",
+    "model": "llama3.2",
+    "base_url": "http://localhost:11434"
+  },
+  "tasks": [
+    {
+      "id": "target_path",
+      "type": "read_stdin",
+      "params": {
+        "prompt": "読み込むファイルパスを入力してください: ",
+        "read_file": false
+      }
+    },
+    {
+      "id": "file_content",
+      "type": "call_mcp",
+      "params": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+        "tool": "read_file",
+        "arguments": {
+          "path": "{{target_path}}"
+        }
+      }
+    },
+    {
+      "id": "summary",
+      "type": "llm_prompt",
+      "params": {
+        "prompt": "以下のファイルの内容を要約してください:\n\n{{file_content}}"
+      }
+    },
+    {
+      "id": "display",
+      "type": "display_result",
+      "params": {
+        "label": "要約",
+        "value": "{{summary}}"
+      }
+    }
+  ]
+}
