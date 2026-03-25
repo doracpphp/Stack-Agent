@@ -1,0 +1,15 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "stack-agent",
+  "outputfilename": "stack-agent",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "frontend:dir": "pipeline-editor",
+  "wailsDir": ".",
+  "author": {
+    "name": "stack-agent",
+    "email": ""
+  }
+}

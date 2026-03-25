@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	appctx "stack-agent/context"
 )
+
+const ollamaTimeout = 10 * time.Minute
 
 // OllamaProvider calls a local Ollama instance.
 type OllamaProvider struct {
@@ -23,7 +26,7 @@ func NewOllama(model, baseURL string) *OllamaProvider {
 	return &OllamaProvider{
 		model:   model,
 		baseURL: baseURL,
-		client:  &http.Client{},
+		client:  &http.Client{Timeout: ollamaTimeout},
 	}
 }
 

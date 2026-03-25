@@ -41,14 +41,17 @@ func Load(path string) (*Pipeline, error) {
 		return nil, fmt.Errorf("parsing pipeline JSON: %w", err)
 	}
 
-	if err := validate(&p); err != nil {
+	if err := Validate(&p); err != nil {
 		return nil, fmt.Errorf("invalid pipeline: %w", err)
 	}
 
 	return &p, nil
 }
 
-func validate(p *Pipeline) error {
+// Validate checks a Pipeline for structural errors. Exported so callers that
+// build a Pipeline from sources other than a JSON file (e.g. the GUI) can
+// reuse the same rules without going through Load.
+func Validate(p *Pipeline) error {
 	if len(p.Tasks) == 0 {
 		return fmt.Errorf("pipeline has no tasks")
 	}

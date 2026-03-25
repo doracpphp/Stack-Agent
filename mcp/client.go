@@ -7,7 +7,10 @@ import (
 	"io"
 	"os/exec"
 	"sync/atomic"
+	"time"
 )
+
+const mcpRequestTimeout = 2 * time.Minute
 
 // Client manages a single MCP server subprocess over stdio.
 type Client struct {
@@ -130,21 +133,38 @@ func (c *Client) sendRequest(req jsonRPCRequest) (*jsonRPCResponse, error) {
 		return nil, fmt.Errorf("mcp: writing request: %w", err)
 	}
 
-	line, err := c.stdout.ReadString('\n')
-	if err != nil {
-		return nil, fmt.Errorf("mcp: reading response: %w", err)
+	// Read the response with a timeout to avoid blocking forever on a hung server.
+	type readResult struct {
+		line string
+		err  error
 	}
+	ch := make(chan readResult, 1)
+	go func() {
+		line, err := c.stdout.ReadString('\n')
+		ch <- readResult{line, err}
+	}()
 
-	var resp jsonRPCResponse
-	if err := json.Unmarshal([]byte(line), &resp); err != nil {
-		return nil, fmt.Errorf("mcp: parsing response: %w", err)
+	select {
+	case r := <-ch:
+		if r.err != nil {
+			return nil, fmt.Errorf("mcp: reading response: %w", r.err)
+		}
+		var resp jsonRPCResponse
+		if err := json.Unmarshal([]byte(r.line), &resp); err != nil {
+			return nil, fmt.Errorf("mcp: parsing response: %w", err)
+		}
+		// Verify the response belongs to this request to prevent mismatched replies.
+		if resp.ID != req.ID {
+			return nil, fmt.Errorf("mcp: response ID mismatch (got %d, want %d)", resp.ID, req.ID)
+		}
+		if resp.Error != nil {
+			return nil, fmt.Errorf("mcp: server error %d: %s", resp.Error.Code, resp.Error.Message)
+		}
+		return &resp, nil
+
+	case <-time.After(mcpRequestTimeout):
+		return nil, fmt.Errorf("mcp: request timed out after %s", mcpRequestTimeout)
 	}
-
-	if resp.Error != nil {
-		return nil, fmt.Errorf("mcp: server error %d: %s", resp.Error.Code, resp.Error.Message)
-	}
-
-	return &resp, nil
 }
 
 // Close terminates the subprocess.

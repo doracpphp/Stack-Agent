@@ -2,6 +2,8 @@ package executor
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	appctx "stack-agent/context"
 	"stack-agent/pipeline"
@@ -12,13 +14,21 @@ import (
 type Executor struct {
 	handlers map[string]task.Handler
 	ctx      *appctx.ExecutionContext
+	w        io.Writer
 }
 
 // New creates an Executor with all built-in task handlers registered.
+// Logs are written to os.Stdout.
 func New(ctx *appctx.ExecutionContext) *Executor {
+	return NewWithWriter(ctx, os.Stdout)
+}
+
+// NewWithWriter creates an Executor that writes logs to the given writer.
+func NewWithWriter(ctx *appctx.ExecutionContext, w io.Writer) *Executor {
 	return &Executor{
 		handlers: registerHandlers(),
 		ctx:      ctx,
+		w:        w,
 	}
 }
 
@@ -31,14 +41,14 @@ func (e *Executor) Run(p *pipeline.Pipeline) error {
 			return fmt.Errorf("task[%d] %q: unknown task type %q", i+1, t.ID, t.Type)
 		}
 
-		fmt.Printf("[%d/%d] %s (type: %s)\n", i+1, total, t.ID, t.Type)
+		fmt.Fprintf(e.w, "[%d/%d] %s (type: %s)\n", i+1, total, t.ID, t.Type)
 
 		if err := h.Execute(t.Params, e.ctx, t.ID); err != nil {
 			return fmt.Errorf("task[%d] %q failed: %w", i+1, t.ID, err)
 		}
 	}
 
-	fmt.Printf("\nパイプライン完了: %d タスクを実行しました\n", total)
+	fmt.Fprintf(e.w, "\nパイプライン完了: %d タスクを実行しました\n", total)
 	return nil
 }
 
@@ -53,6 +63,7 @@ func registerHandlers() map[string]task.Handler {
 		"llm_prompt":       &task.LLMPromptHandler{},
 		"fill_template":    &task.FillTemplateHandler{},
 		"display_result":   &task.DisplayResultHandler{},
+		"read_excel_cells": &task.ReadExcelCellsHandler{},
 		"write_excel":      &task.WriteExcelHandler{},
 		"write_file":       &task.WriteFileHandler{},
 		"call_mcp":         &task.CallMCPHandler{},

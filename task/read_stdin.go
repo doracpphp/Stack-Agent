@@ -50,12 +50,9 @@ func (h *ReadStdinHandler) Execute(params map[string]any, ctx *appctx.ExecutionC
 	}
 
 	if readFile {
-		// Try to read as a file path
 		text, err := readFile2(input)
 		if err != nil {
-			// If file reading fails, store raw input
-			ctx.Set(taskID, &appctx.Content{Text: input})
-			return nil
+			return fmt.Errorf("read_stdin: ファイルの読み込みに失敗しました %q: %w", input, err)
 		}
 		ctx.Set(taskID, &appctx.Content{Text: text, MIME: "text/plain"})
 	} else {

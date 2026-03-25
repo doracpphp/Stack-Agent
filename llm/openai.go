@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	openai "github.com/sashabaranov/go-openai"
 
 	appctx "stack-agent/context"
 )
+
+const openaiTimeout = 10 * time.Minute
 
 // OpenAIProvider calls the OpenAI API (or compatible endpoint).
 type OpenAIProvider struct {
@@ -33,7 +36,8 @@ func (o *OpenAIProvider) Name() string {
 }
 
 func (o *OpenAIProvider) Complete(prompt string, images []*appctx.Content) (string, error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), openaiTimeout)
+	defer cancel()
 
 	// Build message content
 	var parts []openai.ChatMessagePart
