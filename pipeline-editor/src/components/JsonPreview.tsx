@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Pipeline } from '../types';
 import type { ValidationError } from '../types';
-import { SavePipeline } from '../wailsjs/go/main/App';
+import { SavePipeline } from '../../wailsjs/go/main/App';
 import { useI18n } from '../i18n';
 
 interface Props {

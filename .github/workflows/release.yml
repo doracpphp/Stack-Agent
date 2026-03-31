@@ -1,0 +1,142 @@
+name: Release
+
+# v* タグをプッシュしたときに起動
+# 例: git tag v1.0.0 && git push origin v1.0.0
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # リリース作成・アセットアップロードに必要
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # 各プラットフォームでビルド
+  # ─────────────────────────────────────────────────────────────────────────
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest   # Apple Silicon (arm64)
+            platform: darwin/arm64
+            name: macOS-arm64
+          - os: macos-13       # Intel (amd64)
+            platform: darwin/amd64
+            name: macOS-amd64
+          - os: windows-latest
+            platform: windows/amd64
+            name: Windows-amd64
+          - os: ubuntu-22.04   # webkit2gtk-4.0 が確実に存在するバージョン
+            platform: linux/amd64
+            name: Linux-amd64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod   # go.mod の go ディレクティブに合わせる
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Linux のみ: WebKit / GTK のシステムライブラリが必要
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.0-dev \
+            libayatana-appindicator3-dev
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
+
+      # Wails がフロントエンドのビルド（npm install & npm run build）も行う
+      - name: Build GUI (Wails)
+        run: wails build -platform ${{ matrix.platform }} -ldflags "-s -w"
+
+      # macOS: ad-hoc 署名（未署名だと「破損している」と表示される）
+      - name: Ad-hoc codesign (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          codesign --force --deep --sign - build/bin/stack-agent.app
+
+      # ── パッケージング ──────────────────────────────────────────────────
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd build/bin
+          zip -r "../../stack-agent-${{ matrix.name }}.zip" stack-agent.app
+          cd ../..
+          shasum -a 256 "stack-agent-${{ matrix.name }}.zip" \
+            > "stack-agent-${{ matrix.name }}.zip.sha256"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Copy-Item build\bin\stack-agent.exe `
+            "stack-agent-${{ matrix.name }}.exe"
+          $hash = (Get-FileHash "stack-agent-${{ matrix.name }}.exe" -Algorithm SHA256).Hash.ToLower()
+          "$hash  stack-agent-${{ matrix.name }}.exe" | `
+            Out-File -Encoding utf8 "stack-agent-${{ matrix.name }}.exe.sha256"
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cp build/bin/stack-agent "stack-agent-${{ matrix.name }}"
+          tar -czf "stack-agent-${{ matrix.name }}.tar.gz" \
+            "stack-agent-${{ matrix.name }}"
+          sha256sum "stack-agent-${{ matrix.name }}.tar.gz" \
+            > "stack-agent-${{ matrix.name }}.tar.gz.sha256"
+
+      # ── アーティファクトをアップロード ────────────────────────────────────
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stack-agent-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            stack-agent-*.zip
+            stack-agent-*.zip.sha256
+            stack-agent-*.exe
+            stack-agent-*.exe.sha256
+            stack-agent-*.tar.gz
+            stack-agent-*.tar.gz.sha256
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 全ビルドが成功したらリリースを作成してアセットをアップロード
+  # ─────────────────────────────────────────────────────────────────────────
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 全プラットフォームのアーティファクトを dist/ に集める
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Show collected artifacts
+        run: ls -lh dist/
+
+      # タグ名に '-' が含まれる場合はプレリリースとして扱う
+      # 例: v1.0.0-beta.1 → prerelease: true
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "stack-agent ${{ github.ref_name }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: dist/*

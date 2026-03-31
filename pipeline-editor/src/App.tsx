@@ -12,8 +12,8 @@ import type { Pipeline, Task } from './types';
 import { getTaskDef } from './taskDefs';
 import { validate } from './validate';
 import { toExportJSON } from './components/JsonPreview';
-import { OpenPipeline, RunPipeline } from './wailsjs/go/main/App';
-import { EventsOn } from './wailsjs/runtime/runtime';
+import { OpenPipeline, RunPipeline } from '../wailsjs/go/main/App';
+import { EventsOn } from '../wailsjs/runtime/runtime';
 import { useI18n, type Locale } from './i18n';
 
 import { TaskPalette } from './components/TaskPalette';
